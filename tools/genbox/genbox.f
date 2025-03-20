@@ -69,6 +69,8 @@ c------------------------------------------------------------------------------
 #     include "SIZE"
 
       character*132 string
+      character*132 case_name
+      character*132 mesh_fname
       character*1  string1(132)
       equivalence (string,string1)
  
@@ -111,7 +113,7 @@ c------------------------------------------------------------------------------
     
       logical isnum
 
-
+      integer num_args
 
       one    = 1.
       pi     = 4.*atan(one)
@@ -124,12 +126,27 @@ c------------------------------------------------------------------------------
          wdsize=8
       endif
 
+c     Print some parameters
+      write(*,*) "Using maxx = ", maxx
+      write(*,*) "Using maxel = ", maxel
 
 c     Get the input file, which specifies the base .rea file
-      call blank(string,132)
-      write(6,*) 'input file name:'
-      read (5,132) string
+      num_args = command_argument_count()
+      if (num_args.eq.0) then
+          write(*,*) "Number of command line arguments is 0, ",
+     $               "requires user input"
+          call blank(string,132)
+          write(6,*) 'input file name:'
+          read (5,132) string
+          call blank(case_name,132)
+          write(6,*) 'input case name:'
+          read (5,132) case_name
+      else if (num_args.eq.2) then
+          call get_command_argument(1,string)
+          call get_command_argument(2,case_name)
+      endif
   132 format(a132)
+      
       open (unit=7,file=string,status='old')
 
 c     Read in name of previously generated NEKTON data set.
@@ -151,9 +168,12 @@ c     Error check for missing .rea file name
       if(ndim.gt.0) then  ! default is ascii
         iffo = .true.
         open (unit=8,file=string,status='old') !open .rea for old data
-        open (unit=9,file='box.rea')
+        mesh_fname = trim(case_name) // '.rea' 
+        !open (unit=9,file='box.rea')
       else
-        call byte_open('box.re2' // char(0))
+        mesh_fname = trim(case_name) // '.re2' 
+        call byte_open(trim(mesh_fname) // char(0))
+        !call byte_open('box.re2' // char(0))
       endif
       ndim = abs(ndim)
       if (ndim.eq.3) then 
@@ -255,7 +275,9 @@ c----------------------------------------------------------------------
 
             if(nelx*nely*nelz.gt.maxel) then
               write(6,*)
-     $           'ABORT: increase maxel and recompile!',nelx,nely
+     $           'ABORT: increase maxel and recompile! \n',
+     $           'nelx, nely, nelz, maxel = ',
+     $           nelx,nely,nelz,maxel
               call exitt
             elseif (nelx.gt.maxx.or.nely.gt.maxx.or.nelz.gt.maxx) then
                write(6,*) 'ABORT, increase maxx and recompile',
@@ -469,9 +491,11 @@ c           write(998,*) (y(i,1),i=0,nely)
       endif
  
       if(iffo) then
-        write(6,*) 'Beginning construction of box.rea'
+        write(6,*) 'Beginning construction of ',trim(mesh_fname)
+        !write(6,*) 'Beginning construction of box.rea'
       else
-        write(6,*) 'Beginning construction of box.re2'
+        write(6,*) 'Beginning construction of ',trim(mesh_fname)
+        !write(6,*) 'Beginning construction of box.re2'
       endif
       write(6,*) nel,' elements will be created for ',nbox,' boxes.'
       write(6,*) 
