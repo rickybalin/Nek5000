@@ -90,11 +90,11 @@ case $FCcomp in
                ;;
   *gfortran*)  R8="-fdefault-real-8 -fdefault-double-8"
                CPPF="-std=legacy -cpp"
-               BIGMEM="-mcmodel=medium"
+               BIGMEM="-mcmodel=large"
                ;;
   *ifort*)     R8="-r8"
                CPPF="-fpp"
-               BIGMEM="-mcmodel=medium -shared-intel"
+               BIGMEM="-mcmodel=large -shared-intel"
                ;;
   *xlf*)       R8="-qrealsize=8"
                CPPF="-qsuffix=cpp=f"
